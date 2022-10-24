@@ -37,11 +37,12 @@ function App() {
   console.log(max)
   const [name,changeName]= useState('')
   const [chart,changeChart]=useState([])
+  const [statInput,changeStatInput]=useState(['','','','','','','',''])
   let tempData
   let radarData=[]
   let statsSelect=[]
-  for (let i=1; i<=8; i++) {
-    statsSelect.push(<Inputs key={i}/>)
+  for (let i=0; i<8; i++) {
+    statsSelect.push(<Inputs statInput={statInput} changeStatInput={changeStatInput} id={i} key={i}/>)
   }
   const handleChange = (event) => {
     changeName(event.target.value)
@@ -77,16 +78,21 @@ function App() {
         <Radar name={name} dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
         <Legend />
       </RadarChart>
+      {console.log(statInput)}
     </div>
   );
 }
 
 export default App;
 
-const Inputs = () => {
+const Inputs = (props) => {
   let options=Object.values(keys).map(item => <option key={item}>{item}</option>)
+  const handleChange = (event) => {
+    props.changeStatInput(props.statInput.map((item,index) => (props.id!==index)?item:event.target.value))
+  } 
   return (
-    <select>
+    <select onChange={handleChange}>
+      <option disabled selected>Choose a Stat</option>
       {options}
     </select>
   )
