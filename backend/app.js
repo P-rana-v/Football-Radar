@@ -1,15 +1,15 @@
 const express = require("express")
-const pretty = require("pretty")
 const axios = require("axios")
 const cheerio = require("cheerio")
+const fs = require("fs")
 
 const url="https://fbref.com/en/comps/Big5/stats/players/Big-5-European-Leagues-Stats"
+let playerData=[]
 async function scrape() {
     try {
         const {data}=await axios.get(url)
         const $=cheerio.load(data)
         const table= $("#stats_standard tbody tr")
-        let playerData=[]
         table.each((index,element)=>{
             const elements=$(element)
             let id=elements.children("th").text()
@@ -47,8 +47,10 @@ async function scrape() {
                 })
             }   
         })
-        console.log("success");
-
+        fs.writeFile('./data.json',JSON.stringify(playerData),err=>{
+            console.log(err)
+        })
+        console.log("success")      
     }
     catch (err) {
         console.log(err)
@@ -58,6 +60,26 @@ async function scrape() {
 scrape()
 
 let app = express()
+
+app.get('/players',(req,res)=>{
+    let file=fs.readFileSync('./data.json')
+    let fileData=JSON.parse(file)
+    let finalData
+    if(req.query.name) {
+        finalData=fileData.filter((item)=> {
+            if (item.name.toUpperCase().includes(req.query.name.toUpperCase())) {
+                return true
+            }
+            else {
+                return false
+            }
+        })
+    }
+    else {
+        finalData=fileData
+    }
+    res.json(finalData)
+})
 
 app.listen(5000,()=>{
     console.log("Server listening in port 5000");
