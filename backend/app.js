@@ -57,31 +57,33 @@ async function scrape() {
     }
 }
 
-scrape()
-
 let app = express()
 
+app.use(express.static('public'))
+
 app.get('/players',(req,res)=>{
-    let file=fs.readFileSync('./data.json')
-    let fileData=JSON.parse(file)
-    let finalData
-    if(req.query.name) {
-        finalData=fileData.filter((item)=> {
-            if (item.name.toUpperCase().includes(req.query.name.toUpperCase())) {
-                return true
-            }
-            else {
-                return false
-            }
-        })
-    }
-    else {
-        finalData=fileData
-    }
-    res.json(finalData)
+    fs.readFile('./data.json','utf-8',(err,data)=>{
+        let finalData
+        let fileData=JSON.parse(data)
+        if(req.query.name) {
+            finalData=fileData.filter((item)=> {
+                if (item.name.toUpperCase().includes(req.query.name.toUpperCase())) {
+                    return true
+                }
+                else {
+                    return false
+                }
+            })
+        }
+        else {
+            finalData=fileData
+        }
+        res.json(finalData)
+    })
 })
 
 app.listen(5000,()=>{
     console.log("Server listening in port 5000");
 })
 
+scrape()
