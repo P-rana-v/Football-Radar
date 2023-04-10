@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useContext, useState } from "react"
 import nations from "./nations.json"
 import code from "./nation_code.json"
+import { ChangeScreen } from "./App"
 
 function Search() {    
     let searchValue=""
@@ -28,7 +29,7 @@ function Search() {
             <nav>
                 <form onSubmit={handleSubmit} className="nav-form">
                     <input className="search-bar" type="text" onChange={handleChange}></input>
-                    <button type="submit" className="btn search-button mb-2"><i className="fa fa-search" aria-hidden="true"></i></button>
+                    <button type="submit" className="btn button mb-2"><i className="fa fa-search" aria-hidden="true"></i></button>
                 </form>
             </nav>
         </div>
@@ -40,8 +41,12 @@ function Search() {
 }
 
 function Results(props) {
+    let [,setScreen]=useContext(ChangeScreen)
+    const handleClick = (event) => {
+        setScreen([1,props.data])
+    }
     return(
-        <div className="search-result">
+        <div className="search-result" onClick={handleClick}>
             <h2>{props.data.name}</h2>
             <img className="logo" alt={nations[props.data.nation.split(" ")[1]]} src={`https://flagcdn.com/h60/${code[nations[props.data.nation.split(" ")[1]]]}.png`}></img>
             <img className="logo" alt={props.data.team} src={`/teams/${props.data.league.replace(/\s/g,'')}/${props.data.team.replace(/\s/g,'')}.png`}></img>
