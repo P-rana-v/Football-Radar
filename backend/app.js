@@ -5,6 +5,70 @@ const fs = require("fs")
 
 const url="https://fbref.com/en/comps/Big5/stats/players/Big-5-European-Leagues-Stats"
 let playerData=[]
+let format={
+    MP:[],
+    starts:[],
+    mins:[],
+    _90s:[],
+    goals:[],
+    assists:[],
+    GplusA:[],
+    GminusPK:[],
+    PK:[],
+    PKatt:[],
+    yellow:[],
+    red:[],
+    xG:[],
+    npxG:[],
+    xAG:[],
+    npxGxAG:[],
+    npxGplusxAG:[],
+    prgC:[],
+    prgP:[],
+    prgR:[],
+    g90:[],
+    a90:[]
+}
+let percentile = {
+    leagues : {
+        esLaLiga : {
+            FW : JSON.parse(JSON.stringify(format)),
+            MF : JSON.parse(JSON.stringify(format)),
+            DF : JSON.parse(JSON.stringify(format)),
+            GK : JSON.parse(JSON.stringify(format)),
+        },
+        deBundesliga : {
+            FW : JSON.parse(JSON.stringify(format)),
+            MF : JSON.parse(JSON.stringify(format)),
+            DF : JSON.parse(JSON.stringify(format)),
+            GK : JSON.parse(JSON.stringify(format)),
+        },
+        engPremierLeague : {
+            FW : JSON.parse(JSON.stringify(format)),
+            MF : JSON.parse(JSON.stringify(format)),
+            DF : JSON.parse(JSON.stringify(format)),
+            GK : JSON.parse(JSON.stringify(format)),
+        },
+        frLigue1 : {
+            FW : JSON.parse(JSON.stringify(format)),
+            MF : JSON.parse(JSON.stringify(format)),
+            DF : JSON.parse(JSON.stringify(format)),
+            GK : JSON.parse(JSON.stringify(format)),
+        },
+        itSerieA : {
+            FW : JSON.parse(JSON.stringify(format)),
+            MF : JSON.parse(JSON.stringify(format)),
+            DF : JSON.parse(JSON.stringify(format)),
+            GK : JSON.parse(JSON.stringify(format)),
+        }
+    },
+    overall : {
+        FW : JSON.parse(JSON.stringify(format)),
+        MF : JSON.parse(JSON.stringify(format)),
+        DF : JSON.parse(JSON.stringify(format)),
+        GK : JSON.parse(JSON.stringify(format)),
+    }
+}
 async function scrape() {
     try {
         const {data}=await axios.get(url)
@@ -14,7 +78,7 @@ async function scrape() {
             const elements=$(element)
             let id=elements.children("th").text()
             if(!id.startsWith("RkPlayer")) {
-                playerData.push({
+                let extractedData = {
                     id:id,
                     name:elements.children("td:nth-of-type(1)").text(),
                     nation:elements.children("td:nth-of-type(2)").text(),
@@ -25,7 +89,7 @@ async function scrape() {
                     born:elements.children("td:nth-of-type(7)").text(),
                     MP:elements.children("td:nth-of-type(8)").text(),
                     starts:elements.children("td:nth-of-type(9)").text(),
-                    mins:elements.children("td:nth-of-type(10)").text(),
+                    mins:elements.children("td:nth-of-type(10)").text().replace(/,/g, ''),
                     _90s:elements.children("td:nth-of-type(11)").text(),
                     goals:elements.children("td:nth-of-type(12)").text(),
                     assists:elements.children("td:nth-of-type(13)").text(),
@@ -44,8 +108,31 @@ async function scrape() {
                     prgR:elements.children("td:nth-of-type(26)").text(),
                     g90:elements.children("td:nth-of-type(27)").text(),
                     a90:elements.children("td:nth-of-type(28)").text(),
+                }
+                let positions = extractedData.position.split(',')
+                playerData.push(extractedData)
+                positions.forEach(position => {
+                    Object.keys(format).forEach(stat => {
+                        percentile.leagues[extractedData.league.replace(/\s/g,'')][position][stat].push(extractedData[stat])
+                        percentile.overall[position][stat].push(extractedData[stat])
+                    })
                 })
             }   
+        })
+        let positions=["FW","MF","DF","GK"]
+        positions.forEach(position => {
+            Object.keys(format).forEach(stat=> {
+                percentile.overall[position][stat].sort((a,b)=>a-b)
+                Object.keys(percentile.leagues).forEach(league => {
+                    percentile.leagues[league][position][stat].sort((a,b)=>a-b)
+                })
+            })
+            Object.keys(percentile.leagues).forEach(league=> {
+                let temp=percentile.leagues[league][position]
+                fs.writeFileSync(`./public/data/leagues/${league}/${position}.json`,JSON.stringify(temp))
+            })
+            let temp=percentile.overall[position]
+            fs.writeFileSync(`./public/data/overall/${position}.json`,JSON.stringify(temp))
         })
         fs.writeFile('./data.json',JSON.stringify(playerData),err=>{
             console.log(err)
