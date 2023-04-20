@@ -1,14 +1,23 @@
 import { createContext, useContext, useState } from "react"
 import { ChangeScreen } from "./App"
+import {Legend, PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer} from "recharts"
 const Percentile= createContext()
 
 
 function Details() {
+    let [statsList,] = useState(["xG","xAG","npxGplusxAG","prgC","prgP","g90"])
     let percentile = useState({})
     let [screen,setScreen]=useContext(ChangeScreen)
     let stats=[]
+    let radar=[]
     for (let keys in screen[1]) {
         stats.push(<Stats percentile={percentile[0]} key={keys} keys={keys}/>)
+        if (statsList.includes(keys)){
+            radar.push({
+                stat: keys,
+                value: Number(percentile[0][keys])
+            })
+        }
     }
     let positions = screen[1].position.split(',')
     let buttons=[]
@@ -28,7 +37,16 @@ function Details() {
                 </div>
                 <button onClick={handleClick} className="btn mb-2 button back">GO Back</button>
             </div>
-            <div className="stats">
+            <div className="stats">   
+            <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radar}>
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="stat" />
+                    <PolarRadiusAxis angle={30} domain={[0,100]} />
+                    <Radar name={screen[1].name} dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                    <Legend />
+                </RadarChart>
+            </ResponsiveContainer>
                 {buttons}
                 {stats}
             </div>
@@ -52,7 +70,7 @@ function Button(props) {
         .then(item => {
             Object.keys(item).forEach(stat=> {
                 let length=item[stat].length
-                let index=item[stat].lastIndexOf(props.data[stat])
+                let index=item[stat].indexOf(props.data[stat])
                 console.log(item)
                 tempPercentile[stat]=(index/length)*100
             })
@@ -71,8 +89,7 @@ function Stats(props) {
     let [screen] = useContext(ChangeScreen)
     return(
         <>
-            {props.percentile==={} && <h3>{`${props.keys} : ${screen[1][props.keys]}`}</h3>}
-            {props.percentile!=={} && <h3>{`${props.keys} : ${screen[1][props.keys]} : ${props.percentile[props.keys]}`}</h3>}
+            <h3>{`${props.keys} : ${screen[1][props.keys]} : ${props.percentile[props.keys]}`}</h3>
         </>
     )
 }
