@@ -1,22 +1,89 @@
 import { createContext, useContext, useState } from "react"
 import { ChangeScreen } from "./App"
-import {Legend, PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer} from "recharts"
+import { Chart } from "chart.js/auto"
+import { PolarArea } from "react-chartjs-2"
 const Percentile= createContext()
 
 
 function Details() {
-    let [statsList,] = useState(["xG","xAG","npxGplusxAG","prgC","prgP","g90"])
+    let [statsList,] = useState(["goals","assists","expected goals(xG)","expected assisted goals(xAG)","npxG + xAG","progressive carries","progressive passes","non penalty expected goals(npxG)"])
     let percentile = useState({})
     let [screen,setScreen]=useContext(ChangeScreen)
     let stats=[]
-    let radar=[]
+    let chartData={
+        labels: [],
+        datasets: [
+            {
+                data: [],
+                backgroundColor : [
+                    'rgba(255,255,255,0.2)',
+                    'rgba(255,255,255,0.2)',
+                    'rgba(255,255,255,0.2)',
+                    'rgba(255,255,255,0.2)',
+                    'rgba(255,255,255,0.2)',
+                    'rgba(255,255,255,0.2)'
+                ],
+                borderColor : [
+                    'rgba(255,255,255,0.2)',
+                    'rgba(255,255,255,0.2)',
+                    'rgba(255,255,255,0.2)',
+                    'rgba(255,255,255,0.2)',
+                    'rgba(255,255,255,0.2)',
+                    'rgba(255,255,255,0.2)'
+                ],
+                hoverBackgroundColor : [
+                    'rgba(255,255,255,0.4)',
+                    'rgba(255,255,255,0.4)',
+                    'rgba(255,255,255,0.4)',
+                    'rgba(255,255,255,0.4)',
+                    'rgba(255,255,255,0.4)',
+                    'rgba(255,255,255,0.4)'
+                ],
+                hoverVorderColor : [
+                    'rgba(255,255,255,0.4)',
+                    'rgba(255,255,255,0.4)',
+                    'rgba(255,255,255,0.4)',
+                    'rgba(255,255,255,0.4)',
+                    'rgba(255,255,255,0.4)',
+                    'rgba(255,255,255,0.4)'
+                ],
+                borderWidth : 1
+            }
+        ]
+    }
+    const chartOptions = {
+        responsive: true,
+        scales: {
+          r: {
+            ticks: {
+                stepSize: 25,
+                backdropColor: "rgba(0,0,0,0)"
+            },
+            max:100,
+            pointLabels: {
+              display: true,
+              centerPointLabels: true,
+              font: {
+                size: 14
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false,
+            position: 'top',
+          },
+          title: {
+            display: false
+          }
+        }
+    }
     for (let keys in screen[1]) {
         stats.push(<Stats percentile={percentile[0]} key={keys} keys={keys}/>)
         if (statsList.includes(keys)){
-            radar.push({
-                stat: keys,
-                value: Number(percentile[0][keys])
-            })
+            chartData.labels.push(keys)
+            chartData.datasets[0].data.push(percentile[0][keys])
         }
     }
     let positions = screen[1].position.split(',')
@@ -37,17 +104,9 @@ function Details() {
                 </div>
                 <button onClick={handleClick} className="btn mb-2 button back">GO Back</button>
             </div>
-            <div className="stats">   
-            <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radar}>
-                    <PolarGrid />
-                    <PolarAngleAxis dataKey="stat" />
-                    <PolarRadiusAxis angle={30} domain={[0,100]} />
-                    <Radar name={screen[1].name} dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                    <Legend />
-                </RadarChart>
-            </ResponsiveContainer>
+            <div className="stats"> 
                 {buttons}
+                <PolarArea data={chartData} options={chartOptions} />
                 {stats}
             </div>
         </Percentile.Provider>
