@@ -43,14 +43,32 @@ function Search() {
 function Results(props) {
     let [,setScreen]=useContext(ChangeScreen)
     const handleClick = (event) => {
-        setScreen([1,props.data])
+        let tempPercentile={}
+        fetch(`./data/leagues/${props.data.league.replace(/\s/g,'')}/${props.data.position.substring(0,2)}.json`)
+        .then(item => item.json())
+        .then(item => {
+            Object.keys(item).forEach(stat=> {
+                let length=item[stat].length
+                let index=item[stat].indexOf(props.data[stat])
+                console.log(item)
+                tempPercentile[stat]=(index/length)*100
+            })
+            setScreen([1,props.data,tempPercentile])
+        })
     }
     return(
         <div className="search-result" onClick={handleClick}>
-            <h2>{props.data.name}</h2>
-            <img className="logo" alt={nations[props.data.nation.split(" ")[1]]} src={`https://flagcdn.com/h60/${code[nations[props.data.nation.split(" ")[1]]]}.png`}></img>
-            <img className="logo" alt={props.data.team} src={`/teams/${props.data.league.replace(/\s/g,'')}/${props.data.team.replace(/\s/g,'')}.png`}></img>
-            <img className="logo" alt={props.data.league} src={`/leagues/${props.data.league.replace(/\s/g,'')}.png`}></img>
+            <div className="search-heading">
+                <div>
+                    <img className="logo" alt={props.data.team} src={`/teams/${props.data.league.replace(/\s/g,'')}/${props.data.team.replace(/\s/g,'')}.png`}></img>
+                    <h2>{props.data.name}</h2>
+                </div>
+                <div>
+                    <img className="logo" alt={props.data.league} src={`/leagues/${props.data.league.replace(/\s/g,'')}.png`}></img>
+                    <img className="logo flag" alt={nations[props.data.nation.split(" ")[1]]} src={`https://flagcdn.com/h60/${code[nations[props.data.nation.split(" ")[1]]]}.png`}></img>
+                </div>
+            </div>
+            <h5>{props.data.team} &emsp; Position: {props.data.position} &emsp; Age: {props.data.age.slice(0,2)}</h5>
         </div>
     )
 }
